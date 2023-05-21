@@ -1,3 +1,16 @@
 const nxPreset = require('@nx/jest/preset').default;
 
-module.exports = { ...nxPreset };
+const reporters = [
+    'default',
+    [
+        'jest-junit',
+        {
+            outputDirectory: `coverage`,
+            suiteNameTemplate: ({ filepath }) => filepath,
+        },
+    ],
+];
+module.exports = {
+    ...nxPreset,
+    reporters,
+};
