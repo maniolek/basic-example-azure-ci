@@ -11,9 +11,9 @@ parameters:
       - 18.x
 
 variables:
-  dockerRegistryServiceConnection: '934ab605-b29a-4f83-a326-63a54960a971'
-  imageRepository: 'vmd-front'
-  containerRegistry: 'vmddev.azurecr.io'
+  dockerRegistryServiceConnection: '934ab844-11b2-1f83-a326-63a54960a971'
+  imageRepository: 'fancyapp'
+  containerRegistry: 'fancyapp.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
 
 stages:
@@ -99,7 +99,7 @@ stages:
     jobs:
       - deployment: TestRelease
         displayName: 'Deployment Process'
-        environment: 'VMD-TEST'
+        environment: 'FancyApp-Test'
         strategy:
           runOnce:
             deploy:
@@ -123,61 +123,6 @@ stages:
                     tags: 'test'
                 - task: AzureAppServiceManage@0
                   inputs:
-                    azureSubscription: 'VMDRessourceGroupConnection'
+                    azureSubscription: 'FancyAppResourceGroupConnection'
                     action: 'Restart Azure App Service'
-                    webAppName: 'vmd-frontend'
-
-  - stage: DeploymentQAImage
-    displayName: Deploy Docker Image for QA
-    dependsOn: DeploymentTestImage
-    jobs:
-      - deployment: QaRelease
-        displayName: 'Deployment Process'
-        environment: 'VMD-QA'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                - task: Docker@2
-                  displayName: Build
-                  inputs:
-                    command: build
-                    containerRegistry: $(dockerRegistryServiceConnection)
-                    repository: $(imageRepository)
-                    dockerfile: $(dockerfilePath)
-                    tags: 'qa'
-                    arguments: --build-arg APP_BUILD_COMMAND="build:qa"
-                - task: Docker@2
-                  displayName: Push
-                  inputs:
-                    command: push
-                    containerRegistry: $(dockerRegistryServiceConnection)
-                    repository: $(imageRepository)
-                    tags: 'qa'
-                - task: AzureAppServiceManage@0
-                  inputs:
-                    azureSubscription: 'VMDRessourceGroupConnection'
-                    action: 'Restart Azure App Service'
-                    webAppName: 'vmd-frontend-qa'
-
-  - stage: DeploymentLatestImage
-    displayName: Deploy LATEST Docker Image
-    dependsOn: DeploymentQAImage
-    jobs:
-      - deployment: ProdRelease
-        displayName: 'Deployment Process'
-        environment: 'VMD-PROD'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                - task: Docker@2
-                  displayName: Build and push an image to container registry
-                  inputs:
-                    command: buildAndPush
-                    containerRegistry: $(dockerRegistryServiceConnection)
-                    repository: $(imageRepository)
-                    dockerfile: $(dockerfilePath)
-                    tags: 'latest'
+                    webAppName: 'fancy-app-test'
