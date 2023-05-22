@@ -35,7 +35,7 @@ stages:
             displayName: 'Lint application'
             inputs:
               command: custom
-              customCommand: 'run lint'
+              customCommand: 'run lint-all'
           - task: Npm@1
             displayName: 'Build NX application'
             inputs:
@@ -67,14 +67,14 @@ stages:
           - task: NodeTool@0
             displayName: 'Install Node.js'
             inputs:
-              versionSpec: '16.x'
+              versionSpec: ${{ parameters.NodeVersion }}
           - script: 'npm install'
             displayName: 'NPM Install'
           - task: Npm@1
             displayName: 'Lint application'
             inputs:
               command: custom
-              customCommand: 'run lint'
+              customCommand: 'run lint-all'
           - task: Npm@1
             displayName: 'Build NX application'
             inputs:
