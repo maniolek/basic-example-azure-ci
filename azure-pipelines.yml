@@ -120,8 +120,10 @@ stages:
                 - task: AzureWebApp@1
                   displayName: 'Deploy App Service'
                   inputs:
-                    azureSubscription: '009e80bd-57d1-4575-85c2-b3db5596b394'
+                    azureSubscription: 'FancyAppTestServiceConnection'
+                    resourceGroupName: 'fancy-app-test'
                     appName: 'fancy-app-test'
+                    appType: webAppLinux
                     package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
 
 # if running app service in docker mode, after pushing docker image the app service must be restarted using hooks or following task
