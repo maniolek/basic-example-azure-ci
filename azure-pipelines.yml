@@ -11,6 +11,7 @@ parameters:
       - 18.x
 
 variables:
+  azureSubscription: '009e80bd-57d1-4575-85c2-b3db5596b394'
   dockerRegistryServiceConnection: '934ab844-11b2-1f83-a326-63a54960a971'
   imageRepository: 'fancyapp'
   containerRegistry: 'fancyapp.azurecr.io'
@@ -41,7 +42,7 @@ stages:
               command: custom
               customCommand: 'run build'
           - task: Npm@1
-            displayName: 'Run tests'
+            displayName: 'Run tests with code coverage'
             inputs:
               command: custom
               customCommand: 'run test'
@@ -80,7 +81,7 @@ stages:
               command: custom
               customCommand: 'run build'
           - task: Npm@1
-            displayName: 'Run tests'
+            displayName: 'Run tests with code coverage'
             inputs:
               command: custom
               customCommand: 'run test:coverage'
@@ -93,8 +94,20 @@ stages:
             inputs:
               codeCoverageTool: Cobertura
               summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage/combined-coverage.xml
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist/fancy-app/'
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+              replaceExistingArchive: true
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+              ArtifactName: 'drop'
 
   - stage: DeploymentTestImage
+    dependsOn: [ BuildTest ]
     displayName: Deploy Docker Image for Test
     jobs:
       - deployment: TestRelease
@@ -104,25 +117,16 @@ stages:
           runOnce:
             deploy:
               steps:
-                - checkout: self
-                - task: Docker@2
-                  displayName: Build
+                - task: AzureWebApp@1
+                  displayName: 'Deploy App Service'
                   inputs:
-                    command: build
-                    containerRegistry: $(dockerRegistryServiceConnection)
-                    repository: $(imageRepository)
-                    dockerfile: $(dockerfilePath)
-                    tags: 'test'
-                    arguments: --build-arg APP_BUILD_COMMAND="build:test"
-                - task: Docker@2
-                  displayName: Push
-                  inputs:
-                    command: push
-                    containerRegistry: $(dockerRegistryServiceConnection)
-                    repository: $(imageRepository)
-                    tags: 'test'
-                - task: AzureAppServiceManage@0
-                  inputs:
-                    azureSubscription: 'FancyAppResourceGroupConnection'
-                    action: 'Restart Azure App Service'
-                    webAppName: 'fancy-app-test'
+                    azureSubscription: ${{ variables['azureSubscription'] }}
+                    appName: 'fancy-app-test'
+                    package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+
+# if running app service in docker mode, after pushing docker image the app service must be restarted using hooks or following task
+#                - task: AzureAppServiceManage@0
+#                  inputs:
+#                    azureSubscription: ${{ variables['azureSubscription'] }}
+#                    action: 'Restart Azure App Service'
+#                    webAppName: 'fancy-app-test'
