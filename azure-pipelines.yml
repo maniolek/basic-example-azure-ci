@@ -29,8 +29,9 @@ stages:
             displayName: 'Install Node.js'
             inputs:
               versionSpec: ${{ parameters.NodeVersion }}
-          - script: 'npm install'
-            displayName: 'NPM Install'
+          - task: Npm@1
+            inputs:
+              command: 'install'
           - task: Npm@1
             displayName: 'Lint application'
             inputs:
@@ -45,7 +46,7 @@ stages:
             displayName: 'Run tests with code coverage'
             inputs:
               command: custom
-              customCommand: 'run test'
+              customCommand: 'run test-coverage'
           - task: PublishTestResults@2
             inputs:
               searchFolder: $(System.DefaultWorkingDirectory)/coverage
@@ -68,8 +69,9 @@ stages:
             displayName: 'Install Node.js'
             inputs:
               versionSpec: ${{ parameters.NodeVersion }}
-          - script: 'npm install'
-            displayName: 'NPM Install'
+          - task: Npm@1
+            inputs:
+              command: 'install'
           - task: Npm@1
             displayName: 'Lint application'
             inputs:
@@ -84,7 +86,7 @@ stages:
             displayName: 'Run tests with code coverage'
             inputs:
               command: custom
-              customCommand: 'run test:coverage'
+              customCommand: 'run test-coverage'
           - task: PublishTestResults@2
             inputs:
               searchFolder: $(System.DefaultWorkingDirectory)/coverage
@@ -106,9 +108,9 @@ stages:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
               ArtifactName: 'drop'
 
-  - stage: DeploymentTestImage
+  - stage: DeploymentTest
     dependsOn: [ BuildTest ]
-    displayName: Deploy Docker Image for Test
+    displayName: Deploy Application to Test
     jobs:
       - deployment: TestRelease
         displayName: 'Deployment Process'
